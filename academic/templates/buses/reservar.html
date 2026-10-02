@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva de Pasajes - Inter-Sur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen p-6">
+    <div class="max-w-3xl mx-auto space-y-6">
+        
+        <h1 class="text-3xl font-bold text-slate-800">Próximos Viajes Disponibles</h1>
+        <p class="text-slate-500">Selecciona tu recorrido, elige tu asiento y simula la compra en tiempo real.</p>
+
+        <!-- Bucle principal corregido -->
+        {% for item in servicios_con_asientos %}
+            {% with servicio=item.servicio ocupados=item.asientos_ocupados %}
+            <div class="bg-white rounded-2xl shadow-lg p-6 border border-slate-200 transition hover:shadow-xl mb-6" data-servicio-id="{{ servicio.id }}">
+                
+                <!-- Cabecera de la Tarjeta con la Ruta Real y Precios -->
+                <div class="flex justify-between items-center mb-4 border-b pb-3">
+                    <div>
+                        <span class="font-extrabold text-lg text-emerald-900">Ruta: {{ servicio.ruta.origen }} ➔ {{ servicio.ruta.destino }}</span>
+                        <span class="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-0.5 rounded ml-2">{{ servicio.tipo_asiento|title }}</span>
+                    </div>
+                    <span class="text-2xl font-black text-emerald-600">${{ servicio.tarifa }}</span>
+                </div>
+                
+                <!-- Detalles del Viaje -->
+                <div class="grid grid-cols-2 gap-4 text-sm text-slate-700 mb-6">
+                    <div><strong>Salida:</strong> {{ servicio.fecha_salida }}</div>
+                    <div><strong>Asientos Disponibles:</strong> <span id="stock-{{ servicio.id }}" class="text-emerald-600 font-bold">{{ item.asientos_disponibles_reales }}</span></div>
+                </div>
+
+                <!-- Datos del Pasajero simulados -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <input type="text" id="rut-{{ servicio.id }}" placeholder="RUT (ej: 19123456-7)" value="" class="p-2 border rounded-lg text-sm">
+                    <input type="text" id="nombre-{{ servicio.id }}" placeholder="Nombre pasajero" value="" class="p-2 border rounded-lg text-sm">
+                </div>
+
+                <!-- Leyenda del Mapa de Asientos -->
+                <div class="flex gap-6 text-xs text-slate-600 mb-4 items-center bg-slate-50 p-3 rounded-lg">
+                    <span class="flex items-center gap-2"><span class="w-3.5 h-3.5 bg-emerald-600 rounded-md inline-block"></span> Disponible</span>
+                    <span class="flex items-center gap-2"><span class="w-3.5 h-3.5 bg-slate-300 rounded-md inline-block"></span> Ocupado</span>
+                    <span class="flex items-center gap-2"><span class="w-3.5 h-3.5 bg-amber-500 rounded-md inline-block"></span> Seleccionado</span>
+                </div>
+
+                <!-- Mapa de Asientos Dinámico basado en la capacidad real del Bus -->
+                <div class="bg-slate-100 p-4 rounded-xl border border-slate-200 grid grid-cols-8 gap-2 mb-6 max-h-48 overflow-y-auto">
+                    {% for num in item.rango_asientos %}
+                        {% if num in ocupados %}
+                            <!-- Asiento Ocupado (Gris y deshabilitado) -->
+                            <button type="button" disabled
+                                    class="p-2.5 rounded-lg font-bold text-xs bg-slate-300 text-slate-500 cursor-not-allowed shadow-sm">
+                                {{ num }}
+                            </button>
+                        {% else %}
+                            <!-- Asiento Disponible (Verde interactivo) -->
+                            <button type="button" 
+                                    data-asiento="{{ num }}"
+                                    onclick="seleccionarAsiento(this, '{{ servicio.id }}')"
+                                    class="asiento-btn-{{ servicio.id }} p-2.5 rounded-lg font-bold text-xs bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm transition">
+                                {{ num }}
+                            </button>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="text-sm font-semibold text-slate-700 mb-4">
+                    Asiento seleccionado: <span id="seleccion-txt-{{ servicio.id }}" class="text-amber-600 font-bold">Ninguno</span>
+                </div>
+
+                <!-- Botones de Acción Transaccional -->
+                <div class="flex gap-3 justify-end">
+                    <button onclick="agregarAlCarro('{{ servicio.id }}')" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-6 rounded-xl transition text-sm">
+                        Agregar al Carro
+                    </button>
+                    <button onclick="ejecutarCheckout('{{ servicio.id }}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-6 rounded-xl transition text-sm shadow-md">
+                        Comprar
+                    </button>
+                </div>
+            </div>
+            {% endwith %}
+        {% empty %}
+        <div class="bg-white p-6 rounded-xl shadow text-center text-slate-500">
+            No hay servicios de viajes disponibles en este momento.
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- Script para manejar la interactividad y llamadas a la API -->
+    <script>
+        const API_URL = 'http://127.0.0.1:8000/api';
+        let asientoSeleccionadoPorServicio = {};
+
+        function seleccionarAsiento(btn, servicioId) {
+            const numeroAsiento = btn.getAttribute('data-asiento');
+
+            // Remover selección previa en este bus
+            document.querySelectorAll(`.asiento-btn-${servicioId}`).forEach(b => {
+                b.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+                b.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+            });
+
+            // Marcar el actual como seleccionado
+            btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+            btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+
+            asientoSeleccionadoPorServicio[servicioId] = numeroAsiento;
+            document.getElementById(`seleccion-txt-${servicioId}`).innerText = numeroAsiento;
+        }
+
+        async function agregarAlCarro(servicioId) {
+            const asiento = asientoSeleccionadoPorServicio[servicioId];
+            const rut = document.getElementById(`rut-${servicioId}`).value;
+            const nombre = document.getElementById(`nombre-${servicioId}`).value;
+
+            if (!asiento) {
+                alert("Por favor selecciona un número de asiento primero.");
+                return;
+            }
+
+            const token = prompt("Ingresa tu Token JWT de acceso para agregar al carro:");
+
+            try {
+                const res = await fetch(`${API_URL}/carro-pasajes/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        servicio: parseInt(servicioId),
+                        rut_pasajero: rut,
+                        nombre_pasajero: nombre,
+                        numero_asiento: parseInt(asiento)
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert("¡Asiento agregado al carro con éxito!");
+                } else {
+                    alert("Error: " + JSON.stringify(data));
+                }
+            } catch (err) {
+                alert("Error de conexión con la API.");
+            }
+        }
+
+        async function ejecutarCheckout(servicioId) {
+            const token = prompt("Ingresa tu Token JWT de acceso para confirmar la compra (Checkout):");
+
+            try {
+                const res = await fetch(`${API_URL}/ventas/checkout/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert("¡Checkout realizado con éxito! Stock descontado atómicamente.");
+                    location.reload();
+                } else {
+                    alert("Error en el checkout: " + JSON.stringify(data));
+                }
+            } catch (err) {
+                alert("Error de conexión en el checkout.");
+            }
+        }
+    </script>
+</body>
+</html>

@@ -2,6 +2,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
+from .views import reservar_pasaje_view
 
 urlpatterns = [
     # Autenticación JWT
@@ -17,4 +18,7 @@ urlpatterns = [
     
     # ADMINISTRADOR DE FLOTA: Gestión transaccional
     path('ventas/<int:pk>/estado/', views.actualizar_estado_venta, name='actualizar-estado-venta'),
+
+    # Ruta para ver el template visual directo
+    path('reservar/', reservar_pasaje_view, name='reservar_pasaje'),
 ]
