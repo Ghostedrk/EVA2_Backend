@@ -4,6 +4,8 @@ Sistema web **full-stack** para la gestión de rutas, buses, servicios y reserva
 
 La aplicación permite gestionar la disponibilidad de asientos y realizar reservas con control de concurrencia e integridad transaccional para evitar la sobreventa de pasajes.
 
+Autor: Ignacio Alberto Aqueveque Ortiz | Sección: AP-N4-C1
+
 ---
 
 ## ✨ Características principales
