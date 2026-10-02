@@ -1,80 +1,273 @@
-# 🚍 Plataforma de Gestión y Reserva de Pasajes - Buses Inter-Sur
+# 🚍 Plataforma de Gestión y Reserva de Pasajes — Buses Inter-Sur
 
-Sistema web full-stack desarrollado con **Django**, **Django REST Framework (DRF)** y un frontend integrado con plantillas nativas y estilos modernos en **Tailwind CSS**. Permite gestionar rutas, flotas de buses, servicios y realizar reservas de asientos con control de concurrencia y transacciones atómicas.
+Sistema web **full-stack** para la gestión de rutas, buses, servicios y reservas de pasajes. El proyecto está desarrollado con **Django**, **Django REST Framework (DRF)** y un frontend integrado mediante plantillas nativas de Django y **Tailwind CSS**.
 
----
-
-## ⚙️ Características Principales
-* **Arquitectura Híbrida**: API RESTful protegida con autenticación JWT combinada con vistas renderizadas mediante plantillas nativas de Django.
-* **Mapa de Asientos Dinámico**: Generación automática de la grilla de asientos basada en la capacidad real configurada para cada bus.
-* **Control de Disponibilidad en Tiempo Real**: Sincronización automática de asientos ocupados (estados pendientes y pagados) reflejados en gris deshabilitado.
-* **Integridad Transaccional**: Uso de `@transaction.atomic` y bloqueo de filas (`select_for_update`) en el backend para evitar sobreventa de pasajes.
+La aplicación permite gestionar la disponibilidad de asientos y realizar reservas con control de concurrencia e integridad transaccional para evitar la sobreventa de pasajes.
 
 ---
 
-## 🛠️ Requisitos Previos
-Asegúrate de tener instalado en tu equipo:
-* Python 3.10 o superior.
-* Git.
+## ✨ Características principales
+
+- **Arquitectura híbrida:** API RESTful protegida mediante autenticación JWT, combinada con vistas renderizadas mediante plantillas nativas de Django.
+- **Mapa de asientos dinámico:** la grilla de asientos se genera automáticamente según la capacidad configurada para cada bus.
+- **Disponibilidad en tiempo real:** los asientos pendientes y pagados se reflejan como ocupados/deshabilitados en la interfaz.
+- **Integridad transaccional:** se utilizan `@transaction.atomic` y `select_for_update` para controlar la concurrencia y evitar la sobreventa de pasajes.
+- **Flujo de reserva y compra:** permite seleccionar un asiento, agregarlo al carro y ejecutar un checkout transaccional.
 
 ---
 
-## 🚀 Guía de Instalación y Puesta en Marcha
+## 🛠️ Tecnologías
 
-Sigue estos pasos en tu terminal para levantar el proyecto desde cero:
+- **Python 3.10+**
+- **Django**
+- **Django REST Framework (DRF)**
+- **JWT**
+- **Tailwind CSS**
+- **Base de datos compatible con Django ORM**
 
-### 1. Clonar el repositorio y acceder al directorio
+---
+
+## 📋 Requisitos previos
+
+Antes de comenzar, asegúrate de tener instalado:
+
+- [Python 3.10 o superior](https://www.python.org/)
+- [Git](https://git-scm.com/)
+
+Además, el proyecto debe contar con un archivo `requirements.txt` en la raíz del repositorio.
+
+---
+
+## 🚀 Instalación y puesta en marcha
+
+Sigue estos pasos para levantar el proyecto desde cero.
+
+### 1. Clonar el repositorio
+
 ```bash
 git clone <url-del-repositorio>
 cd <nombre-de-la-carpeta-del-proyecto>
+```
 
-### 2. Crear y activar el entorno virtual 
+### 2. Crear y activar el entorno virtual
 
+En **Windows**:
+
+```bash
 python -m venv venv
 venv\Scripts\activate
+```
 
-### 3. Instalar dependencias
+En **Linux / macOS**:
 
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Instalar las dependencias
+
+```bash
 pip install -r requirements.txt
+```
 
-### 4. Aplicar las migraciones de la Base de Datos
+### 4. Crear y aplicar las migraciones
 
+Si existen cambios pendientes en los modelos:
+
+```bash
 python manage.py makemigrations
+```
+
+Luego aplica las migraciones:
+
+```bash
 python manage.py migrate
+```
 
-### 5. Crear un Superusuario (Nombre, Correo, Contraseña)
+### 5. Crear un superusuario
 
+Para acceder al panel de administración de Django:
+
+```bash
 python manage.py createsuperuser
+```
+
+El comando solicitará los datos necesarios, como nombre de usuario, correo y contraseña.
 
 ### 6. Iniciar el servidor de desarrollo
 
+```bash
 python manage.py runserver
+```
 
-###🧪 Cómo Probar la Aplicación
-Una vez que el servidor esté corriendo en http://127.0.0.1:8000/, puedes seguir este flujo de prueba:
+La aplicación quedará disponible en:
 
-Crear Datos Base:
+```text
+http://127.0.0.1:8000/
+```
 
-Entra al Panel de Administración en http://127.0.0.1:8000/admin/.
+---
 
-Registra una Ruta (Ej: Origen: Temuco, Destino: Los Muermos).
+## 🧪 Cómo probar la aplicación
 
-Registra un Bus especificando su capacidad total (Ej: 35 o 40 asientos).
+Una vez iniciado el servidor, puedes probar el flujo completo de gestión y reserva.
 
-Crea un Servicio asociando la ruta, el bus, la tarifa y la fecha de salida.
+### 1. Crear los datos base
 
-Probar la Interfaz de Reservas:
+Accede al panel de administración:
 
-Abre en tu navegador la ruta de la aplicación: http://127.0.0.1:8000/reservar/
+```text
+http://127.0.0.1:8000/admin/
+```
 
-Verás las tarjetas de los viajes disponibles con su respectiva ruta, tarifa y la grilla exacta de asientos generada según la capacidad real del bus.
+Desde allí:
 
-Simular una Compra Interactiva:
+1. Registra una **Ruta**.
+   - Ejemplo: `Temuco → Los Muermos`
+2. Registra un **Bus** e indica su capacidad total.
+   - Ejemplo: `35` o `40` asientos.
+3. Crea un **Servicio** asociando:
+   - Ruta
+   - Bus
+   - Tarifa
+   - Fecha de salida
 
-Rellena los datos simulados del pasajero (RUT y Nombre).
+### 2. Probar la interfaz de reservas
 
-Haz clic en un número de asiento disponible (este cambiará a color ámbar/seleccionado).
+Abre:
 
-Presiona "Agregar al Carro" e introduce tu Token JWT de acceso cuando la alerta te lo solicite.
+```text
+http://127.0.0.1:8000/reservar/
+```
 
-Presiona "Comprar" para ejecutar el checkout transaccional. La página se recargará automáticamente, el asiento comprado cambiará de color a gris (ocupado/bloqueado) y el stock de asientos disponibles se descontará de forma exacta en tiempo real.
+Deberías visualizar las tarjetas de los viajes disponibles, incluyendo:
+
+- Ruta del viaje.
+- Tarifa.
+- Fecha de salida.
+- Grilla de asientos generada de acuerdo con la capacidad real del bus.
+- Disponibilidad actual de los asientos.
+
+### 3. Simular una compra
+
+Para probar el flujo de compra:
+
+1. Completa los datos simulados del pasajero:
+   - RUT
+   - Nombre
+2. Selecciona un asiento disponible.
+3. El asiento seleccionado cambiará a estado **seleccionado**.
+4. Presiona **Agregar al Carro**.
+5. Cuando la aplicación lo solicite, introduce tu **Token JWT** de acceso.
+6. Presiona **Comprar** para ejecutar el checkout transaccional.
+
+Después de completar la compra, la aplicación debería:
+
+- Recargar la información de disponibilidad.
+- Marcar el asiento comprado como **ocupado/bloqueado**.
+- Descontar correctamente el asiento del stock disponible.
+- Mantener la integridad de la reserva mediante las transacciones del backend.
+
+---
+
+## 🔐 Concurrencia e integridad de las reservas
+
+Uno de los puntos importantes del proyecto es evitar que dos usuarios puedan comprar simultáneamente el mismo asiento.
+
+Para esto, el backend utiliza:
+
+```python
+@transaction.atomic
+```
+
+junto con:
+
+```python
+select_for_update()
+```
+
+Esto permite ejecutar las operaciones críticas dentro de una transacción y bloquear las filas correspondientes mientras se procesa la reserva, reduciendo el riesgo de condiciones de carrera y sobreventa.
+
+---
+
+## 📁 Estructura general del proyecto
+
+La estructura exacta puede variar según la organización del repositorio. Como referencia, un proyecto Django de este tipo suele seguir una estructura similar a:
+
+```text
+proyecto/
+├── manage.py
+├── requirements.txt
+├── README.md
+├── app/
+│   ├── models.py
+│   ├── views.py
+│   ├── serializers.py
+│   ├── urls.py
+│   └── ...
+├── templates/
+│   └── ...
+└── ...
+```
+
+> **Nota:** esta sección es orientativa. El README original no especifica la estructura exacta de carpetas del repositorio.
+
+---
+
+## ⚠️ Notas importantes
+
+- Reemplaza `<url-del-repositorio>` por la URL real del repositorio antes de publicar este README.
+- Reemplaza `<nombre-de-la-carpeta-del-proyecto>` por el nombre generado al clonar el repositorio.
+- El proyecto requiere que las dependencias indicadas estén disponibles en `requirements.txt`.
+- El flujo de compra descrito corresponde al flujo de prueba indicado en la documentación original.
+
+---
+
+## 📌 Resumen del flujo
+
+```text
+Administrador
+    │
+    ├── Crear Ruta
+    ├── Crear Bus
+    └── Crear Servicio
+             │
+             ▼
+       Viajes disponibles
+             │
+             ▼
+      Seleccionar asiento
+             │
+             ▼
+        Agregar al carro
+             │
+             ▼
+      Autenticación JWT
+             │
+             ▼
+       Checkout transaccional
+             │
+             ▼
+       Asiento ocupado
+```
+
+---
+
+## 👨‍💻 Desarrollo
+
+Para trabajar localmente sobre el proyecto, activa siempre el entorno virtual antes de ejecutar comandos de Django:
+
+```bash
+venv\Scripts\activate
+```
+
+Y utiliza:
+
+```bash
+python manage.py runserver
+```
+
+para iniciar el servidor de desarrollo.
+
+---
